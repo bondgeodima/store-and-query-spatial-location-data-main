@@ -7,78 +7,9 @@
 	content="width=device-width, initial-scale=1.0">
 <!-- Get the leaflet CSS file -->
 
-<style>
-body {font-family: Arial, Helvetica, sans-serif;}
-* {box-sizing: border-box;}
+    {% load static %}
 
-/* Button used to open the contact form - fixed at the bottom of the page */
-.open-button {
-  background-color: #555;
-  color: white;
-  padding: 16px 20px;
-  border: none;
-  cursor: pointer;
-  opacity: 0.8;
-  position: fixed;
-  bottom: 23px;
-  right: 28px;
-  width: 280px;
-}
-
-/* The popup form - hidden by default */
-.form-popup {
-  display: none;
-  position: fixed;
-  bottom: 0;
-  right: 15px;
-  border: 3px solid #f1f1f1;
-  z-index: 9;
-}
-
-/* Add styles to the form container */
-.form-container {
-  max-width: 300px;
-  padding: 10px;
-  background-color: white;
-}
-
-/* Full-width input fields */
-.form-container input[type=text], .form-container input[type=password] {
-  width: 100%;
-  padding: 15px;
-  margin: 5px 0 22px 0;
-  border: none;
-  background: #f1f1f1;
-}
-
-/* When the inputs get focus, do something */
-.form-container input[type=text]:focus, .form-container input[type=password]:focus {
-  background-color: #ddd;
-  outline: none;
-}
-
-/* Set a style for the submit/login button */
-.form-container .btn {
-  background-color: #04AA6D;
-  color: white;
-  padding: 16px 20px;
-  border: none;
-  cursor: pointer;
-  width: 100%;
-  margin-bottom:10px;
-  opacity: 0.8;
-}
-
-/* Add a red background color to the cancel button */
-.form-container .cancel {
-  background-color: red;
-}
-
-/* Add some hover effects to buttons */
-.form-container .btn:hover, .open-button:hover {
-  opacity: 1;
-}
-</style>
+    <link rel="stylesheet" type="text/css" href="{% static 'addlocation/style.css' %}">
 
   <!-- Load Leaflet from CDN -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
@@ -87,6 +18,10 @@ body {font-family: Arial, Helvetica, sans-serif;}
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
     integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
     crossorigin=""></script>
+
+    <script src="{% static 'addlocation/leaflet.draw.js' %}"></script>
+    <!--<link rel="stylesheet" type="text/css" href="{% static 'addlocation/leaflet.draw.css' %}">-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css">
 
   <!-- Load Esri Leaflet from CDN -->
   <script src="https://unpkg.com/esri-leaflet@2.5.0/dist/esri-leaflet.js"
@@ -103,54 +38,97 @@ body {font-family: Arial, Helvetica, sans-serif;}
 
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="{% static 'addlocation/leaflet-sidebar.min.css' %}">
+    <script src="{% static 'addlocation/leaflet-sidebar.min.js' %}"></script>
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css">
+
 
 </head>
 <body>
 <h1>Add location into the database by selecting the location and fill name and description</h1>
 
 <br>
-<a class="btn btn-primary" href="http://localhost:8000/allpoints"> All stored locations </a>
+    <a class="btn btn-primary" href="http://localhost:8000/allpoints"> All stored locations </a>
 <br>
-<button class="open-button" onclick="openForm()">Open Form</button>
+<!--<button class="open-button" onclick="openForm()">Open Form</button>-->
 
-<div class="form-popup" id="myForm">
-  <form action="addlocation" method="POST" class="form-container">
-    <h1>When you select a location the coordinates are auto filled</h1>
+<div id="sidebar" class="leaflet-sidebar collapsed">
+  <!-- Nav tabs -->
+  <div class="leaflet-sidebar-tabs">
+    <ul role="tablist">
+      <li><a href="#home" role="tab"><i class="fa fa-bars"></i></a></li>
+      <li class="disabled"><a href="#profile" id="toggledraw" role="tab"><i class="fa fa-pen"></i></a></li>
+    </ul>
+  </div>
 
-<label for="name"><b>Name</b></label>
-    <input id='name' type="text" placeholder="Name of the place" name="name" required>
+  <!-- Tab panes -->
+  <div class="leaflet-sidebar-content">
+    <div class="leaflet-sidebar-pane" id="home">
+      <h1 class="leaflet-sidebar-header">
+        Layers
+        <span class="leaflet-sidebar-close"><i class="fa fa-caret-right"></i></span>
+      </h1>
+      <span id="layercontrol"></span>
+      <div id="latlng"></div>
 
-    <label for="latitude"><b>Latitude</b></label>
-    <input id='ipid1' type="float" placeholder="latitude" name="latitude" required>
+    </div>
 
-    <label for="longitude"><b>Longitude</b></label>
-    <input id='ipid2' type="float" placeholder="longitude" name="longitude" required>
+    <div class="leaflet-sidebar-pane" id="profile">
+      <h1 class="leaflet-sidebar-header">Profile<span class="leaflet-sidebar-close"><i class="fa fa-caret-right"></i></span></h1>
+    </div>
+  </div>
+</div>
 
-    <label for="description"><b>Description</b></label>
-    <input id='desc' type="text" placeholder="description" name="description" >
+<div class="container" style="width: 1000px; height: 300px">
+    <div class="row">
+        <div class="col-md-12" >
+            <div class="col-md-4" >
+                <div class="form-popup" id="myForm">
+                  <form action="addlocation" method="POST" class="form-container">
+                    <h1>When you select a location the coordinates are auto filled</h1>
 
-    <button type="submit" class="btn">Setpoint</button>
-  </form>
+                    <label for="name"><b>Name</b></label>
+                    <input id='name' type="text" placeholder="Name of the place" name="name" required>
+
+                    <label for="latitude"><b>Latitude</b></label>
+                    <input id='ipid1' type="float" placeholder="latitude" name="latitude" required>
+
+                    <label for="longitude"><b>Longitude</b></label>
+                    <input id='ipid2' type="float" placeholder="longitude" name="longitude" required>
+
+                    <label for="description"><b>Description</b></label>
+                    <input id='desc' type="text" placeholder="description" name="description" >
+
+                    <button type="submit" class="btn">Setpoint</button>
+                  </form>
+                </div>
+            </div>
+            <div class="col-md-4" >
+                <div id="map" style="width: 740px; height: 540px"></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>document.getElementById("myForm").style.display = "block";</script>
 
-
-<!--<div id="map"></div>-->
-<!-- Specify the map and it's dimensions -->
-<div id="map" style="width: 1020px; height: 500px"></div>
-
 <!-- Get the leaflet JavaScript file -->
 
 <script>
-var map = L.map('map').setView([11,79], 7);
+ var map = L.map('map').setView([11,79], 7);
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  tile_layer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(map);
 
   var gcs = L.esri.Geocoding.geocodeService();
 
+/*
   map.on('click', (e)=>{
     gcs.reverse().latlng(e.latlng).run((err, res)=>{
       if(err) return;
@@ -160,12 +138,129 @@ var map = L.map('map').setView([11,79], 7);
       document.getElementById("ipid1").value=l1;
       document.getElementById("ipid2").value=l2;      
     });
-
   });
+*/
 
   function openForm() {
   document.getElementById("myForm").style.display = "block";
 }
+
+L.control
+  .zoom({
+    position: "topleft"
+  })
+  .addTo(map);
+
+var sidebar = L.control
+  .sidebar({
+    autopan: false,
+    container: "sidebar",
+    position: "right"
+  })
+  .addTo(map);
+
+//Render Layer Control & Move to Sidebar
+  var baseMaps = {
+    "Tile layer": tile_layer
+  };
+
+var overlays = {};
+
+//Render Layer Control & Move to Sidebar
+var layerControl = L.control
+  .layers(baseMaps, overlays, {
+    position: "topright",
+    collapsed: false
+  })
+  .addTo(map);
+
+var oldLayerControl = layerControl.getContainer();
+var newLayerControl = $("#layercontrol");
+newLayerControl.append(oldLayerControl);
+$(".leaflet-control-layers-list").prepend("<strong class='title'>Base Maps</strong><br>");
+$(".leaflet-control-layers-separator").after("<br><strong class='title'>Layers</strong>");
+
+//######## Leaflet Draw
+var editableLayers = new L.FeatureGroup();
+layerControl.addOverlay(editableLayers, "Cosmetic Layer");
+map.addLayer(editableLayers);
+
+var drawOptions = {
+  position: "topleft",
+  draw: {
+    polyline: true,
+    polygon: {
+      allowIntersection: false, // Restricts shapes to simple polygons
+      drawError: {
+        color: "#e1e100", // Color the shape will turn when intersects
+        message: "<strong>Oh snap!<strong> you can't draw that!" // Message that will show when intersect
+      }
+    },
+    circle: true, // Turns off this drawing tool
+    rectangle: true,
+    marker: true
+  },
+  edit: {
+    featureGroup: editableLayers, //REQUIRED!!
+    remove: true
+  }
+};
+
+var drawControl = new L.Control.Draw(drawOptions);
+map.addControl(drawControl);
+
+map.on(L.Draw.Event.CREATED, function(e) {
+  var type = e.layerType,
+    layer = e.layer;
+
+  if (type === "marker") {
+    layer
+      .bindPopup(
+        "LatLng: " + layer.getLatLng().lat + "," + layer.getLatLng().lng
+      )
+      .openPopup();
+  }
+
+  editableLayers.addLayer(layer);
+  $(".drawercontainer .drawercontent").html(
+    JSON.stringify(editableLayers.toGeoJSON())
+  );
+});
+
+map.on(L.Draw.Event.EDITSTOP, function(e) {
+  $(".drawercontainer .drawercontent").html(
+    JSON.stringify(editableLayers.toGeoJSON())
+  );
+});
+
+map.on(L.Draw.Event.DELETED, function(e) {
+  $(".drawercontainer .drawercontent").html("");
+});
+
+//Edit Button Clicked
+$('#toggledraw').click(function(e) {
+  $(".leaflet-draw").fadeToggle("fast", "linear");
+  $(".leaflet-draw-toolbar").fadeToggle("fast", "linear");
+  this.blur();
+  return false;
+});
+
+//Handle Map click to Display Lat/Lng
+map.on('click', function(e) {
+  $("#latlng").html(e.latlng.lat + ", " + e.latlng.lng);
+    $("#latlng").show();
+});
+
+//Handle Copy Lat/Lng to clipboard
+$('#latlng').click(function(e) {
+  var $tempElement = $("<input>");
+    $("body").append($tempElement);
+    $tempElement.val($("#latlng").text()).select();
+    document.execCommand("Copy");
+    $tempElement.remove();
+    alert("Copied: "+$("#latlng").text());
+    $("#latlng").hide();
+});
 
 </script>
 </body>
