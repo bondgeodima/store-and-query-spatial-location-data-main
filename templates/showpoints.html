@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Show points</title>
+<meta charset="utf-8" />
+<meta name="viewport"
+	content="width=device-width, initial-scale=1.0">
+<!-- Get the leaflet CSS file -->
+
+
+  <!-- Load Leaflet from CDN -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+    crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+    crossorigin=""></script>
+</head>
+<body>
+<h1>Nearby location name </h1>
+<script>
+var points="{{allpoints|safe}}";
+
+console.log(points);
+var names=[
+{% for point in allpoints %}
+"{{point.name}}",
+{% endfor%}
+]
+console.log(names);
+var loc=[
+{% for point in allpoints %}
+"{{point.location}}",
+
+{% endfor%}
+]
+
+</script>
+<ul>
+{% for point in allpoints %}
+<li>{{point.name}}
+</li>
+{% endfor %}
+</ul>
+
+<a class="btn btn-primary" href="http://localhost:8000/viewpoints"> Query from new location </a>
+<br>
+<a class="btn btn-primary" href="http://localhost:8000/allpoints"> All stored locations </a>
+<br>
+<a class="btn btn-primary" href="http://localhost:8000/addlocation"> Add new location </a>
+<br>
+<div id="map" style="width: 80%; height: 500px"></div>
+<script>
+  var lat={{lat|safe}};
+  var long={{long|safe}};
+  var map = L.map('map').setView([11,79], 7);
+  var marker;
+  var layer_group;
+  var tile_layer;
+
+  var mbAttr = 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>';
+  var mbUrl = 'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
+  var grayscale = L.tileLayer(mbUrl, {id: 'mapbox/light-v9', tileSize: 512, zoomOffset: -1, attribution: mbAttr});
+
+  tile_layer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+  
+  for(i=0;i<lat.length;i++){
+	marker = L.marker([lat[i],long[i]]).addTo(map).bindPopup(names[i]).openPopup();
+	layer_group = L.layerGroup([marker]);
+  }
+
+  var baseMaps = {
+    "Tile layer": tile_layer,
+    "Grayscale": grayscale
+  };
+
+  var overlayMaps = {
+      "Points": layer_group
+  };
+
+  L.control.layers(baseMaps, overlayMaps).addTo(map);
+  </script>
+</body>
+</html>
